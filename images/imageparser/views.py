@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
+from PIL import Image
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from .models import Site, Photo
 from .utils import url_validate, image_parser, get_image, get_name, get_filename, get_thumb, read_image
-from PIL import Image
 
 
 def index(request):

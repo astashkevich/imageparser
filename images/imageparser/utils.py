@@ -1,13 +1,16 @@
-from urllib.request import urlopen, HTTPError, URLError
-from urllib.parse import urlparse, urljoin, urlsplit
-from bs4 import BeautifulSoup
-from io import BytesIO
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
+# -*- coding: utf-8 -*-
 from PIL import Image, ImageOps
-from django.core.files.base import ContentFile
-import mimetypes
+#from bs4 import BeautifulSoup
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.files.base import ContentFile
+from django.core.validators import URLValidator
+from io import BytesIO
+import mimetypes
+from urllib.parse import urljoin, urlsplit
+import urllib.request
+import time
+import lxml.html
 
 
 def url_validate(url):
@@ -19,8 +22,8 @@ def url_validate(url):
         url = 'http://' + url
     try:
         validate(url)
-        urlopen(url)
-    except (ValidationError, HTTPError, URLError):
+        urllib.request.urlopen(url)
+    except (ValidationError, urllib.request.HTTPError, urllib.request.URLError):
         return False
     else:
         return url
@@ -41,10 +44,20 @@ def image_parser(url):
     return absolute image URL like http://example.com/image.jpg
     """
     domain = urljoin(url, '/')
-    soup = BeautifulSoup(urlopen(url), "html.parser")
-    images = soup.findAll('img', src=True)
+
+    req = urllib.request.Request(url)
+    data = urllib.request.urlopen(req).read()
+    html = lxml.html.document_fromstring(data)
+    #images = html.xpath('//img/@src' or "a[ends-with(@href, '.jpg')]")
+    images = html.xpath('//img/@src')
+
+    # soup = BeautifulSoup(urllib.request.urlopen(url), "html.parser")
+    # images = soup.findAll('img', src=True)
+
     for image in images:
-        image_url = urljoin(domain, image["src"])
+        #image_url = urljoin(domain, image["src"])
+        image_url = urljoin(domain, image)
+        print(image_url)
         if mimetype_validate(image_url):
             yield image_url
         else:
@@ -55,7 +68,7 @@ def read_image(image_url):
     read image from url
     """
     try:
-        image = Image.open(BytesIO(urlopen(image_url).read()))
+        image = Image.open(BytesIO(urllib.request.urlopen(image_url).read()))
         return image
     except (IOError, OSError):
         print('bad image')
