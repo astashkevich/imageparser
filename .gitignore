@@ -1,2 +1,3 @@
-/env
-/images/media/images
+env/
+images/media/images/
+images/db.sqlite3
