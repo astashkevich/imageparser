@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Web Academy imageparser project{% endblock title %}
+{% block content %}
+<div class="container">
+  <div class="row marketing">
+    <div class="col-lg-6">
+    {% for site in sites|slice:"::2" %}
+      <a href="/sites/{{ site.id }}/"><h4>{{ site.name }}</h4></a>
+    {% endfor %}
+    </div>
+
+    <div class="col-lg-6">
+    {% for site in sites|slice:"1::2" %}
+      <a href="/sites/{{ site.id }}/"><h4>{{ site.name }}</h4></a>
+    {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

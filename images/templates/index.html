@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Web Academy imageparser project{% endblock title %}
+
+{% block content %}
+<div class="container">
+    <!-- Jumbotron Header -->
+    <header class="jumbotron hero-spacer">
+        <h1>Image Parser</h1>
+        <p>Downloads all images from a specified URL, save to storage and display on a page</p>
+        <form  method="POST" >
+        {% csrf_token %}
+            <div class="input-group">
+                <input name="q" class="form-control" type="text" placeholder="http://example.com">
+                <span class="input-group-btn">
+                    <button class="btn btn-default" type="submit">Search</button>
+                </span>
+            </div>
+            {% if errors %}
+            <div class="has-error">
+                {% for error in errors %}
+                <span class="help-block">{{ error }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </form>
+        <div class="WhiteScreen">
+            <img id="loading_image" src="/static/images/load.gif" alt="loading">
+            <span>Image processing...</span>
+        </div>
+    </header>
+</div>
+{% endblock content %}
+
+{% block extra_js %}
+<script language="javascript" type="text/javascript">
+$("form").submit(function() {
+    $('.WhiteScreen').show();
+    $(':submit',this).attr('disabled','disabled');
+    return true;
+});
+</script>
+{% endblock extra_js %}
