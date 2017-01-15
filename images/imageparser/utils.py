@@ -51,9 +51,6 @@ def image_parser(url):
     html = lxml.html.document_fromstring(data)
     images = html.xpath('//img/@src')
 
-    # soup = BeautifulSoup(urllib.request.urlopen(url), "html.parser")
-    # images = soup.findAll('img', src=True)
-
     for image in images:
         image_url = urljoin(domain, image)
         if mimetype_validate(image_url):
