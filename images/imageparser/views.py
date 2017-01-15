@@ -6,6 +6,8 @@ from PIL import Image
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, TemplateView
 from multiprocessing.dummy import Pool
+#from multiprocessing import Pool
+#from gevent.pool import Pool
 from .models import Site, Photo
 from .utils import url_validate, image_parser, get_image, read_image, create_images, get_name
 
@@ -31,11 +33,11 @@ def index(request):
 
                 jobs = [gevent.spawn(read_image, image_url) for image_url in image_parser(url)]
                 gevent.joinall(jobs)
+                print(time.clock() - start, 'read images')
 
                 images = ((site,) + job.value  for job in jobs if job.value)
 
-                #start = time.clock()
-                pool = Pool(4)
+                pool = Pool()
                 pool.map(create_images, images)
                 pool.close()
                 pool.join()

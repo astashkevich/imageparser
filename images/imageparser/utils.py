@@ -122,3 +122,4 @@ def create_images(*args):
     photo.image.save(filename, image_file)
     photo.image_thumbnail.save('thumbnail_%s.%s'%(filename.split('.')[0], filename.split('.')[-1]), thumb_file)
     photo.save()
+    print('create ' + filename)
