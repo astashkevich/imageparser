@@ -1,3 +1,4 @@
+*.pyc
 env/
 images/media/images/
 images/db.sqlite3

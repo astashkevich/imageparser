@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+import gevent
+import time
+
 from PIL import Image, ImageOps
-#from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
 from django.core.validators import URLValidator
 from io import BytesIO
+import lxml.html
 import mimetypes
 from urllib.parse import urljoin, urlsplit
 import urllib.request
-import time
-import lxml.html
+from .models import Site, Photo
 
 
 def url_validate(url):
@@ -44,20 +46,16 @@ def image_parser(url):
     return absolute image URL like http://example.com/image.jpg
     """
     domain = urljoin(url, '/')
-
     req = urllib.request.Request(url)
     data = urllib.request.urlopen(req).read()
     html = lxml.html.document_fromstring(data)
-    #images = html.xpath('//img/@src' or "a[ends-with(@href, '.jpg')]")
     images = html.xpath('//img/@src')
 
     # soup = BeautifulSoup(urllib.request.urlopen(url), "html.parser")
     # images = soup.findAll('img', src=True)
 
     for image in images:
-        #image_url = urljoin(domain, image["src"])
         image_url = urljoin(domain, image)
-        print(image_url)
         if mimetype_validate(image_url):
             yield image_url
         else:
@@ -69,7 +67,7 @@ def read_image(image_url):
     """
     try:
         image = Image.open(BytesIO(urllib.request.urlopen(image_url).read()))
-        return image
+        return image, get_filename(image_url)
     except (IOError, OSError):
         print('bad image')
         return False
@@ -91,7 +89,7 @@ def get_thumb(image):
     """
     THUMBNAIL_SIZE = getattr(
                 settings,
-                "GALLERY_THUMBNAIL_SIZE",
+                "THUMBNAIL_SIZE",
                 (260, 146)
             )
     width, height = image.size
@@ -114,3 +112,16 @@ def get_filename(image_url):
     return name of image file with extension
     """
     return image_url.split('/')[-1] 
+
+def create_images(*args):
+    """
+    create image ang image_thumbnail, save Photo instance
+    """
+    args, = args
+    site, image, filename = args
+    image_file = get_image(image)
+    thumb_file = get_thumb(image)
+    photo = Photo(name=filename, site=site)
+    photo.image.save(filename, image_file)
+    photo.image_thumbnail.save('thumbnail_%s.%s'%(filename.split('.')[0], filename.split('.')[-1]), thumb_file)
+    photo.save()

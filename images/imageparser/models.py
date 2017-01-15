@@ -1,14 +1,13 @@
-
-from io import BytesIO
 import os
 
 from PIL import Image
-from django.db import models
-from django.conf import settings
+from io import BytesIO
 from django.core.files.base import ContentFile
+from django.db import models
 from django.db import models
 from django.db.models.signals import pre_delete, pre_save
 from django.dispatch.dispatcher import receiver
+from django.conf import settings
 
 
 def upload_to(instance, filename):

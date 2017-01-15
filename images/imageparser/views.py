@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
+import gevent
+import time
+
 from PIL import Image
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, DetailView, TemplateView
+from multiprocessing.dummy import Pool
 from .models import Site, Photo
-from .utils import url_validate, image_parser, get_image, get_name, get_filename, get_thumb, read_image
+from .utils import url_validate, image_parser, get_image, read_image, create_images, get_name
 
 
 def index(request):
@@ -16,6 +20,7 @@ def index(request):
         if q is None or q == '':
             errors.append('Enter web-site URL')
         else:
+            start = time.clock()
             url = url_validate(q)
             if not url:
                 errors.append('Invalid URL')
@@ -24,18 +29,17 @@ def index(request):
                 site = Site(name=name) #create site instance
                 site.save()
 
-                for image_url in image_parser(url):
-                    image = read_image(image_url)
-                    if not image:
-                        continue
-                    image_file = get_image(image)
-                    thumb_file = get_thumb(image)
-                    filename = get_filename(image_url)
-                    uploaded_image = Photo(name=filename, site=site)
-                    uploaded_image.image.save(filename, image_file)
-                    uploaded_image.image_thumbnail.save('thumbnail_%s.%s'%(filename.split('.')[0], filename.split('.')[-1]), thumb_file)
-                    uploaded_image.save()
-                    image_file.close()
+                jobs = [gevent.spawn(read_image, image_url) for image_url in image_parser(url)]
+                gevent.joinall(jobs)
+
+                images = ((site,) + job.value  for job in jobs if job.value)
+
+                #start = time.clock()
+                pool = Pool(4)
+                pool.map(create_images, images)
+                pool.close()
+                pool.join()
+                print(time.clock() - start)
                 return redirect('detail', pk=site.pk)
 
     return render(request, template, {'errors': errors})

@@ -1,7 +1,5 @@
-from django.contrib import admin
-
-# Register your models here.
 from .models import  Site, Photo
+from django.contrib import admin
 
 
 class PhotoInline(admin.TabularInline):
@@ -14,7 +12,6 @@ class PhotoInline(admin.TabularInline):
 		return u'<img src="%s" width="100" />' % obj.image_thumbnail.url
 	get_photo.short_description = 'Preview'
 	get_photo.allow_tags = True
-
 
 
 class SiteAdmin(admin.ModelAdmin):
